@@ -13,3 +13,9 @@ def generateds():
 
     return X, Y_, Y_c
 
+if __name__ == '__main__':
+    x, y, z = generateds()
+    print(x.shape)
+    print(y.shape)
+    print(type(x))
+    print(type(y))
