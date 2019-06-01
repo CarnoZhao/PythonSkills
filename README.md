@@ -1,2 +1,2 @@
 # PythonSkills
-Extra trivial skills out of normal using python
+Some skills written in Python
