@@ -25,7 +25,8 @@ def loadInformation():
         'heating',
         'rent',
         'twobath',
-        'deposit'
+        'deposit',
+        'price'
         ]
     return url, headers, columns
 
@@ -41,7 +42,7 @@ def getPos(href):
 def nameSpliter(names):
     directions = ['东', '南', '西', '北']
     face = names.split()[-1]
-    face = [direction in face for direction in directions]
+    face = [int(direction in face) for direction in directions]
     return face
 
 def desSpliter(des):
@@ -61,7 +62,7 @@ def timeSpliter(time):
 
 def attrsSpliter(attrs):
     refs = ['is_subway_house', 'is_new', 'is_key', 'decoration', 'central_heating', 'rent_period_month', 'two_bathroom', 'deposit_1_pay_1']
-    return [ref in attrs for ref in refs]
+    return [int(ref in attrs) for ref in refs]
 
 def contentSpliter(content):
     title = content.find(class_ = 'content__list--item--title twoline')
@@ -78,7 +79,8 @@ def contentSpliter(content):
     attrsTags = attrs.find_all('i')
     attrs = [tag.attrs['class'][0].split('--')[1] for tag in attrsTags]
     subway, new, key, decoration, heating, rent, twobath, deposit = attrsSpliter(attrs)
-    line = [E, S, W, N, pos[0], pos[1], space, floor, time, subway, new, key, decoration, heating, rent, twobath, deposit]
+    price = content.find(class_ = 'content__list--item-price').find('em').get_text().strip()
+    line = [E, S, W, N, pos[0], pos[1], space, floor, time, subway, new, key, decoration, heating, rent, twobath, deposit, price]
     return line
 
 def pageSpliter(soup):

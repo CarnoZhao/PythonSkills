@@ -31,7 +31,8 @@ name_list = []
 fw = open('LianJiaTemp.txt', 'w')
 hreftemp = open('hreftemp.txt', 'w')
 for page in range(1, 101):
-    result = requests.get(url(page), headers = headers)
+    try:
+        result = requests.get(url(page), headers = headers)
     except:
         break
     soup = BeautifulSoup(result.text, 'html.parser')
