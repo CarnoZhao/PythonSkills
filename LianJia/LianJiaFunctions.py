@@ -36,8 +36,7 @@ def attrs_clean(df):
     for line in df.attrs:
         attrs_set.update(line.keys())
     for attr in attrs_set:
-        df[attr] = df.attrs.apply(
-                lambda x: 1 if attr in x else 0)
+        df[attr] = df.attrs.apply(lambda x: 1 if attr in x else 0)
     return
 
 def get_positions(href):
