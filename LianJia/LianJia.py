@@ -30,8 +30,11 @@ data = []
 name_list = []
 fw = open('LianJiaTemp.txt', 'w')
 hreftemp = open('hreftemp.txt', 'w')
-for page in range(1, 101):
-    result = requests.get(url(page), headers = headers)
+for page in range(1, 201):
+    try:
+        result = requests.get(url(page), headers = headers)
+    except:
+        break
     soup = BeautifulSoup(result.text, 'html.parser')
     content_list = soup.find_all(class_ = 'content__list--item--main')
     print('Page %d ........' % page)
@@ -80,11 +83,11 @@ for page in range(1, 101):
         price = item.find(class_ = 'content__list--item-price').find('em').get_text().strip()
         line.append(price)
         fw.write('\t'.join(str(x) for x in line) + '\n')
-        if len(line) != len(columns):
-            print(line)
-        else:
-            data.append(line)
-    print()
+    #     if len(line) != len(columns):
+    #         print(line)
+    #     else:
+    #         data.append(line)
+    # print()
 
 fw.close()
 hreftemp.close()
