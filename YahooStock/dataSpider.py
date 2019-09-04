@@ -26,24 +26,24 @@ def save_sp500_tickers_sector():
         sector = row.findAll('td')[3].text.strip().replace(' ', '_')
         tickers.append(ticker)
         tickers_sectors[sector].append(ticker)    
-    with open('tickers_sectors.json', 'w') as fw:
+    with open('/home/tongxueqing/zhaox/codes/PythonSkills/YahooStock/tickers_sectors.json', 'w') as fw:
         fw.write(json.dumps(tickers_sectors))
-    with open('tickers.txt', 'w') as fw:
+    with open('/home/tongxueqing/zhaox/codes/PythonSkills/YahooStock/tickers.txt', 'w') as fw:
         fw.write('\t'.join(tickers) + '\n')
     return tickers, tickers_sectors
 # save_sp500_tickers_sector()
 
 def load_ticker_sectors():
-    with open('tickers_sectors.json') as f:
+    with open('/home/tongxueqing/zhaox/codes/PythonSkills/YahooStock/tickers_sectors.json') as f:
         tickers_sectors = json.load(fp = f)
-    with open('tickers.txt') as f:
+    with open('/home/tongxueqing/zhaox/codes/PythonSkills/YahooStock/tickers.txt') as f:
         tickers = f.read().strip().split('\t')
     return tickers, tickers_sectors
 
 def get_data_from_yahoo():
     if not os.path.exists('/data/tongxueqing/zhaox/stockExisted'):
         os.makedirs('/data/tongxueqing/zhaox/stockExisted')
-    start = dt.datetime(2010, 1, 1)
+    start = dt.datetime(2008, 1, 1)
     end = dt.datetime(2018, 12, 31)
     tickers, _ = load_ticker_sectors()
     for ticker in tickers:
@@ -61,6 +61,8 @@ def get_data_from_yahoo():
 get_data_from_yahoo()
 
 def compile_data_together():
+    if not os.path.exists('/data/tongxueqing/zhaox/stockCompiled'):
+        os.makedirs('/data/tongxueqing/zhaox/stockCompiled')
     tickers, tickers_sectors = load_ticker_sectors()
     main_total = pd.DataFrame()
     for sector, tickers in tickers_sectors.items():
@@ -75,8 +77,8 @@ def compile_data_together():
             f.columns = [ticker]
             sector_file = f if sector_file.empty else sector_file.join(f)
         main_total = sector_file if main_total.empty else main_total.join(sector_file)
-        sector_file.to_csv('/data/tongxueqing/zhaox/stockCompiled/sp500_%s_dj_close.csv' % sector)
-    main_total.to_csv('/data/tongxueqing/zhaox/stockCompiled/sp500_total_close.csv')
+        sector_file.to_csv('/data/tongxueqing/zhaox/stockCompiled/%s.csv' % sector.lower())
+    main_total.to_csv('/data/tongxueqing/zhaox/stockCompiled/total.csv')
 
 compile_data_together()
 
