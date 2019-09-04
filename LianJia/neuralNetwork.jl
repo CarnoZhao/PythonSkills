@@ -1,7 +1,7 @@
 using DelimitedFiles, Statistics, Random
 using Flux
-using CUDAdrv, CuArrays
-using PyPlot
+using CUDAdrv, CuArrays, CUDAnative
+using Plots
 
 function load_data(train_ratio, use_gpu = true)
     data = readdlm("/home/tongxueqing/zhaox/codes/PythonSkills/LianJia/contents.csv", '\t',  Float64, header = true)[1]
@@ -20,32 +20,38 @@ function load_data(train_ratio, use_gpu = true)
     end
 end
 
-function predict(X)
+function predict(net, X)
     Yhat = net(X)
-    [yhat.data for yhat in Yhat]
+    [yhat.data for yhat in Yhat] |> gpu
+end
+
+function callback_func(trloss, tsloss, loss, X, Y, tX, tY)
+    push!(trloss, Float64(loss(X, Y).data))
+    push!(tsloss, Float64(loss(tX, tY).data))
+    # println("Train loss: $(round(Float64(loss(X, Y).data), digits = 4))")
+    # println("Test loss: $(round(Float64(loss(tX, tY).data), digits = 4))")
+    return
 end
 
 function model(numIters; learnRate = 0.0001, beta1 = 0.9, beta2 = 0.999)
+    trloss = []
+    tsloss = []
     X, Y, tX, tY = load_data(0.9)
     net = Chain(
-        Dense(17, 50, relu, initW = Flux.glorot_normal),
-        Dense(50, 30, relu, initW = Flux.glorot_normal),
+        Dense(17, 30, relu, initW = Flux.glorot_normal),
         Dense(30, 10, relu, initW = Flux.glorot_normal),
-        Dense(10, 5, relu, initW = Flux.glorot_normal),
-        Dense(5, 1, initW = Flux.glorot_normal)
+        Dense(10, 1, tanh, initW = Flux.glorot_normal)
     ) |> gpu
-    loss(x, y) = ((net(x) - y) * (net(x) - y)' / size(y)[2])[1, 1]
     parameters = params(net)
+    loss(x, y) = ((net(x) - y) * (net(x) - y)' / size(y)[2])[1, 1]
     data = Iterators.repeated((X, Y), numIters)
-    callback = () -> @show(loss(X, Y))
+    callback = () -> callback_func(trloss, tsloss, loss, X, Y, tX, tY)
     optimizer = AdaMax(learnRate, (beta1, beta2))
-    Flux.train!(loss, parameters, data, optimizer, cb = Flux.throttle(callback, 5))
-    println("Loss in test: $(loss(tX, tY))")
-    net
+    Flux.train!(loss, parameters, data, optimizer, cb = Flux.throttle(callback, 0.1))
+    println("Loss in test: $(Float64(loss(tX, tY).data))")
+    net, trloss, tsloss
 end
 
-net = model(3000);
-
-X, Y, tX, tY = load_data(0.9, false)
-PyPlot.scatter(1:size(tY)[2], predict(tX) - tY)
-PyPlot.savefig("/home/tongxueqing/zhaox/codes/PythonSkills/LianJia/estimate.png")
+net, trloss, tsloss = model(4000);
+Plots.plot([x for x in trloss], label = "Train");
+plot!([x for x in tsloss], label = "Test")
